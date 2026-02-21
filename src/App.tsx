@@ -6,6 +6,7 @@ import { GlitchPage } from './effects/glitch/GlitchPage'
 import { ExtrusionPage } from './effects/extrusion/ExtrusionPage'
 import { ExtrusionV2Page } from './effects/extrusionV2/ExtrusionV2Page'
 import { ExtrusionObjectPage } from './effects/extrusionObject/ExtrusionObjectPage'
+import { ExtrusionPlanePage } from './effects/extrusionPlane/ExtrusionPlanePage'
 
 // Simple Scene Wrapper to handle context-dependent logic if needed
 function Scene({ page }: { page: string }) {
@@ -19,6 +20,7 @@ function Scene({ page }: { page: string }) {
         {page === 'extrusion' && <ExtrusionPage />}
         {page === 'extrusionV2' && <ExtrusionV2Page />}
         {page === 'extrusionObject' && <ExtrusionObjectPage />}
+        {page === 'extrusionPlane' && <ExtrusionPlanePage />}
       </Suspense>
     </>
   )
@@ -26,7 +28,7 @@ function Scene({ page }: { page: string }) {
 
 function App() {
   const { page } = useControls('Navigation', {
-    page: { options: ['water', 'glitch', 'extrusion', 'extrusionV2', 'extrusionObject'] }
+    page: { options: ['water', 'glitch', 'extrusion', 'extrusionV2', 'extrusionObject', 'extrusionPlane'] }
   })
 
   return (
