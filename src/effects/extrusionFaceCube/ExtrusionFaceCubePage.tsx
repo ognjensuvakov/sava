@@ -2,8 +2,9 @@ import { useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useControls } from 'leva'
 import { FaceCubeNeedles } from './components/FaceCubeNeedles'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, RoundedBox } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 
 export function ExtrusionFaceCubePage() {
     const interactRef = useRef(new THREE.Vector3(999, 999, 999))
@@ -18,7 +19,10 @@ export function ExtrusionFaceCubePage() {
         thickness,
         radius,
         showBase,
-        idleColor
+        idleColor,
+        motionFade,
+        blurSpread,
+        roundingRadius
     } = useControls('Face Cube Settings', {
         cubeSize: { value: 6.0, min: 2.0, max: 20.0 },
         detail: { value: 40, min: 10, max: 100, step: 1 },
@@ -27,7 +31,10 @@ export function ExtrusionFaceCubePage() {
         thickness: { value: 0.05, min: 0.005, max: 0.2, step: 0.001 },
         radius: { value: 2.0, min: 0.5, max: 10.0 },
         showBase: true,
-        idleColor: '#111111'
+        idleColor: '#111111',
+        motionFade: { value: 0.96, min: 0.8, max: 0.999 },
+        blurSpread: { value: 1.5, min: 0.0, max: 5.0 },
+        roundingRadius: { value: 0.5, min: 0.0, max: 2.0 }
     })
 
     const { colorA, colorB, colorC, colorD } = useControls('Needle Palette', {
@@ -68,21 +75,24 @@ export function ExtrusionFaceCubePage() {
         <>
             <group ref={groupRef}>
                 {/* Trigger mesh for interaction point */}
-                <mesh
+                <RoundedBox
+                    args={[cubeSize + 0.1, cubeSize + 0.1, cubeSize + 0.1]}
+                    radius={roundingRadius}
                     onPointerMove={handlePointerMove}
                     onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
                     onPointerOut={handlePointerOut}
                 >
-                    <boxGeometry args={[cubeSize + 0.1, cubeSize + 0.1, cubeSize + 0.1]} />
                     <meshBasicMaterial transparent opacity={0.0} depthWrite={false} color="red" />
-                </mesh>
+                </RoundedBox>
 
                 {/* Solid base cube */}
                 {showBase && (
-                    <mesh>
-                        <boxGeometry args={[cubeSize * 0.99, cubeSize * 0.99, cubeSize * 0.99]} />
+                    <RoundedBox
+                        args={[cubeSize * 0.99, cubeSize * 0.99, cubeSize * 0.99]}
+                        radius={roundingRadius}
+                    >
                         <meshBasicMaterial color={idleColor} transparent opacity={hovered ? 1.0 : 0.0} />
-                    </mesh>
+                    </RoundedBox>
                 )}
 
                 <FaceCubeNeedles
@@ -98,8 +108,15 @@ export function ExtrusionFaceCubePage() {
                     colorC={colorC}
                     colorD={colorD}
                     idleColor={idleColor}
+                    motionFade={motionFade}
+                    blurSpread={blurSpread}
+                    roundingRadius={roundingRadius}
                 />
             </group>
+
+            <EffectComposer>
+                <Bloom luminanceThreshold={0.5} mipmapBlur intensity={0.5} />
+            </EffectComposer>
 
             <OrbitControls makeDefault />
         </>

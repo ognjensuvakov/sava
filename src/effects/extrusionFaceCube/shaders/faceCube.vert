@@ -4,6 +4,9 @@ uniform float uSpikeMax;
 uniform vec3 uInteractPos;
 uniform float uRadius;
 
+uniform float uBlurSpread;
+uniform vec4 uTrail[64];
+
 varying float vIntensity;
 varying vec3 vColorMix;
 
@@ -15,27 +18,39 @@ void main() {
     vec3 iLocalPos = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
     vec3 worldInstancePos = (modelMatrix * vec4(iLocalPos, 1.0)).xyz;
     
-    // Calculate distance from world instance pos to intersection point
-    float dist = distance(worldInstancePos, uInteractPos);
-    
-    float activeStrength = 0.0;
+    float maxActiveStrength = 0.0;
     
     // Add noise to the interaction distance so it's not a perfect circle
     float noiseVal = random(worldInstancePos.xz) * 0.5 + random(worldInstancePos.yz) * 0.5;
-    float irregularRadius = uRadius * (0.7 + 0.6 * noiseVal);
+    
+    float t = floor(uTime * 15.0);
+    // Use world position to scramble noise for glitches
+    float randVal = random(iLocalPos.xy + t + iLocalPos.z);
+    float spike = step(0.6, randVal) * randVal * uSpikeMax;
 
-    if (dist < irregularRadius) {
-         float t = floor(uTime * 15.0);
-         // Use world position to scramble noise for glitches
-         float randVal = random(iLocalPos.xy + t + iLocalPos.z);
-         
-         float spike = step(0.6, randVal) * randVal * uSpikeMax;
-         
-         // Smooth out the very edge just enough to not be aliased, but don't do a full cone/pyramid falloff
-         float edgeFade = smoothstep(irregularRadius, irregularRadius * 0.8, dist);
-         
-         activeStrength = edgeFade * (0.2 + spike);
+    // Evaluate trail points
+    for(int i = 0; i < 64; i++) {
+        vec4 tData = uTrail[i];
+        float strength = tData.w;
+        if(strength <= 0.001) continue;
+        
+        float dist = distance(worldInstancePos, tData.xyz);
+        
+        float ageFade = 1.0 - strength; // 0 for head, 1 for tail
+        float r = uRadius + ageFade * uBlurSpread; // grows over time
+        float irregularRadius = r * (0.7 + 0.6 * noiseVal);
+        
+        if (dist < irregularRadius) {
+            // as it fades we make the smoothstep edge softer (more blurry/glowy edge)
+            float softness = mix(0.8, 0.2, ageFade); 
+            float edgeFade = smoothstep(irregularRadius, irregularRadius * softness, dist);
+            
+            float pointStrength = edgeFade * (0.2 + spike) * strength;
+            maxActiveStrength = max(maxActiveStrength, pointStrength);
+        }
     }
+    
+    float activeStrength = maxActiveStrength;
     
     float h = activeStrength * uScale;
     

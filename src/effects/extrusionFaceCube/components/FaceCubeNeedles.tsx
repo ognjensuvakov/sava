@@ -4,8 +4,12 @@ import { useFrame } from '@react-three/fiber'
 import faceCubeVertexShader from '../shaders/faceCube.vert?raw'
 import faceCubeFragmentShader from '../shaders/faceCube.frag?raw'
 
+const MAX_TRAIL = 64
+
 const FaceCubeMaterial = {
     uniforms: {
+        uTrail: { value: new Array(MAX_TRAIL).fill(null).map(() => new THREE.Vector4(999, 999, 999, 0)) },
+        uBlurSpread: { value: 1.5 },
         uInteractPos: { value: new THREE.Vector3(999, 999, 999) },
         uRadius: { value: 2.0 },
         uTime: { value: 0 },
@@ -34,6 +38,9 @@ export type FaceCubeNeedlesProps = {
     colorC: [number, number, number]
     colorD: [number, number, number]
     idleColor: string
+    motionFade: number
+    blurSpread: number
+    roundingRadius: number
 }
 
 export function FaceCubeNeedles({
@@ -48,12 +55,65 @@ export function FaceCubeNeedles({
     colorB,
     colorC,
     colorD,
-    idleColor
+    idleColor,
+    motionFade,
+    blurSpread,
+    roundingRadius
 }: FaceCubeNeedlesProps) {
     const meshRef = useRef<THREE.InstancedMesh>(null)
     const materialRef = useRef<THREE.ShaderMaterial>(null)
+    const trailData = useRef<THREE.Vector4[]>(new Array(MAX_TRAIL).fill(null).map(() => new THREE.Vector4(999, 999, 999, 0)))
 
-    const geometry = useMemo(() => new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize, detail, detail, detail), [cubeSize, detail])
+    const geometry = useMemo(() => {
+        // We don't use RoundedBoxGeometry because it concentrates vertices ONLY at the corners/edges.
+        // We want a uniform scatter across the flat faces AND the corners.
+        // So we start with a dense standard box...
+        const boxGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize, detail, detail, detail)
+
+        const posAttr = boxGeo.getAttribute('position')
+        const normAttr = boxGeo.getAttribute('normal')
+
+        // The mathematical inner sharp box
+        const innerHalf = Math.max(0, cubeSize / 2 - roundingRadius)
+
+        for (let i = 0; i < posAttr.count; i++) {
+            const px = posAttr.getX(i)
+            const py = posAttr.getY(i)
+            const pz = posAttr.getZ(i)
+
+            // Find closest geometric point on the inner sharp box
+            const cx = Math.max(-innerHalf, Math.min(innerHalf, px))
+            const cy = Math.max(-innerHalf, Math.min(innerHalf, py))
+            const cz = Math.max(-innerHalf, Math.min(innerHalf, pz))
+
+            // Vector pointing outward from the inner box surface
+            const dx = px - cx
+            const dy = py - cy
+            const dz = pz - cz
+
+            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+            let nx, ny, nz
+            if (dist > 0.0001) {
+                // In the rounding corners, surface normal points away from the inner corner
+                nx = dx / dist
+                ny = dy / dist
+                nz = dz / dist
+            } else {
+                // Flat face areas keep their flat normal
+                nx = normAttr.getX(i)
+                ny = normAttr.getY(i)
+                nz = normAttr.getZ(i)
+            }
+
+            // Project vertex outwards by roundingRadius to form the final rounded box
+            posAttr.setXYZ(i, cx + nx * roundingRadius, cy + ny * roundingRadius, cz + nz * roundingRadius)
+            // Overwrite the normal for our needle lookAt
+            normAttr.setXYZ(i, nx, ny, nz)
+        }
+
+        return boxGeo
+    }, [cubeSize, detail, roundingRadius])
 
     const count = geometry.attributes.position.count
 
@@ -89,7 +149,18 @@ export function FaceCubeNeedles({
     }, [geometry, count, cubeSize, detail])
 
     useFrame((state) => {
+        // Update trail array
+        for (let i = MAX_TRAIL - 1; i > 0; i--) {
+            trailData.current[i].copy(trailData.current[i - 1])
+            trailData.current[i].w *= motionFade
+            if (trailData.current[i].w < 0.001) trailData.current[i].w = 0
+        }
+        const isActive = interactRef.current.x < 900 ? 1.0 : 0.0
+        trailData.current[0].set(interactRef.current.x, interactRef.current.y, interactRef.current.z, isActive)
+
         if (materialRef.current) {
+            materialRef.current.uniforms.uTrail.value = trailData.current
+            materialRef.current.uniforms.uBlurSpread.value = blurSpread
             materialRef.current.uniforms.uInteractPos.value.copy(interactRef.current)
             materialRef.current.uniforms.uRadius.value = radius
 
