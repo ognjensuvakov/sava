@@ -18,7 +18,7 @@ if (!container) {
         camera={{ position: [0, 0, 15], fov: 45 }}
         gl={{ antialias: true, alpha: true }} // alpha true allows webflow background to show
       >
-        <color attach="background" args={['#000000']} />
+
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 5]} intensity={1} />
         <StandaloneFaceCube />

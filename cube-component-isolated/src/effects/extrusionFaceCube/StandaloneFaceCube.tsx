@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { FaceCubeNeedles } from './components/FaceCubeNeedles'
 import { OrbitControls, RoundedBox } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer, Bloom } from '@react-three/postprocessing'
+
 
 // Default hardcoded settings, easily replaceable by the designer
 const SETTINGS = {
@@ -142,10 +142,6 @@ export function StandaloneFaceCube() {
                     roundingRadius={roundingRadius}
                 />
             </group>
-
-            <EffectComposer>
-                <Bloom luminanceThreshold={0.5} mipmapBlur intensity={0.5} />
-            </EffectComposer>
 
             <OrbitControls makeDefault enableZoom={false} />
         </>
