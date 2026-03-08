@@ -7,25 +7,41 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing'
 
 // Default hardcoded settings, easily replaceable by the designer
 const SETTINGS = {
-    cubeSize: 6,
-    detail: 40,
-    scale: 3.5,
-    spikeMax: 3,
-    thickness: 0.05,
-    radius: 2,
-    showBase: true,
-    idleColor: "#111111",
-    motionFade: 0.96,
-    blurSpread: 1.5,
-    roundingRadius: 0.5,
-    cameraZ: 15.0,
-    palette: {
-        colorA: [0.5, 0.5, 0.5] as [number, number, number],
-        colorB: [0.5, 0.5, 0.5] as [number, number, number],
-        colorC: [1, 1, 1] as [number, number, number],
-        colorD: [0, 0.33, 0.67] as [number, number, number]
+    "cubeSize": 6,
+    "detail": 40,
+    "scale": 0.1,
+    "spikeMax": 0.5,
+    "thickness": 0.1,
+    "radius": 2,
+    "showBase": true,
+    "idleColor": "#111111",
+    "motionFade": 0.999,
+    "blurSpread": 0,
+    "roundingRadius": 0.5,
+    "cameraZ": 18,
+    "palette": {
+        "colorA": [
+            0.1,
+            0.1,
+            0.7
+        ] as [number, number, number],
+        "colorB": [
+            0.3,
+            0.4,
+            0.3
+        ] as [number, number, number],
+        "colorC": [
+            0.7,
+            0.9,
+            0.9
+        ] as [number, number, number],
+        "colorD": [
+            0.8,
+            0.9,
+            0.67
+        ] as [number, number, number]
     }
-}
+};
 
 export function StandaloneFaceCube() {
     const interactRef = useRef(new THREE.Vector3(999, 999, 999))
