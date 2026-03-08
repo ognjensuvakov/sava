@@ -29,10 +29,23 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - name: Install dependencies
-        run: npm ci
-      - name: Build
-        run: npm run build
+      - name: Build Playground
+        run: |
+          cd playground
+          npm ci
+          npm run build
+      - name: Build Standalone Widget
+        run: |
+          cd cube-component-isolated
+          npm install
+          npm run build
+      - name: Combine Outputs
+        run: |
+          mkdir -p dist
+          cp -r playground/dist/* dist/
+          mkdir -p dist/widget/assets
+          cp cube-component-isolated/dist/assets/water-cube-widget.js dist/widget/assets/
+          cp cube-component-isolated/dist/assets/water-cube-widget.css dist/widget/assets/
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
