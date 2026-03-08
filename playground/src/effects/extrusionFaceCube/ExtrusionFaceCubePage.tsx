@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
 import { useControls } from 'leva'
 import { FaceCubeNeedles } from './components/FaceCubeNeedles'
-import { OrbitControls, RoundedBox } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { OrbitControls, RoundedBox, Html } from '@react-three/drei'
+import { useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 
 export function ExtrusionFaceCubePage() {
@@ -22,7 +22,8 @@ export function ExtrusionFaceCubePage() {
         idleColor,
         motionFade,
         blurSpread,
-        roundingRadius
+        roundingRadius,
+        cameraZ
     } = useControls('Face Cube Settings', {
         cubeSize: { value: 6.0, min: 2.0, max: 20.0 },
         detail: { value: 40, min: 10, max: 100, step: 1 },
@@ -34,7 +35,8 @@ export function ExtrusionFaceCubePage() {
         idleColor: '#111111',
         motionFade: { value: 0.96, min: 0.8, max: 0.999 },
         blurSpread: { value: 1.5, min: 0.0, max: 5.0 },
-        roundingRadius: { value: 0.5, min: 0.0, max: 2.0 }
+        roundingRadius: { value: 0.5, min: 0.0, max: 2.0 },
+        cameraZ: { value: 15.0, min: 5.0, max: 50.0 }
     })
 
     const { colorA, colorB, colorC, colorD } = useControls('Needle Palette', {
@@ -43,6 +45,12 @@ export function ExtrusionFaceCubePage() {
         colorC: [1.0, 1.0, 1.0],
         colorD: [0.00, 0.33, 0.67],
     })
+
+    const { camera } = useThree()
+
+    useEffect(() => {
+        camera.position.set(0, 0, cameraZ)
+    }, [camera, cameraZ])
 
     useFrame((_, delta) => {
         if (groupRef.current) {
@@ -119,6 +127,33 @@ export function ExtrusionFaceCubePage() {
             </EffectComposer>
 
             <OrbitControls makeDefault />
+
+            {/* Display configuration JSON for easy copying */}
+            <Html position={[-cubeSize * 1.5, cubeSize * 1.5, 0]} center>
+                <div style={{
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    color: '#00ff00',
+                    padding: '15px',
+                    borderRadius: '8px',
+                    fontFamily: 'monospace',
+                    fontSize: '12px',
+                    width: '350px',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
+                    pointerEvents: 'auto',
+                    userSelect: 'text',
+                    border: '1px solid #333',
+                    whiteSpace: 'pre-wrap'
+                }}>
+                    <div style={{ marginBottom: '10px', color: '#fff', fontWeight: 'bold' }}>
+                        Current Settings (Copy to Standalone widget):
+                    </div>
+                    {JSON.stringify({
+                        cubeSize, detail, scale, spikeMax, thickness, radius, showBase, idleColor, motionFade, blurSpread, roundingRadius, cameraZ,
+                        palette: { colorA, colorB, colorC, colorD }
+                    }, null, 2)}
+                </div>
+            </Html>
         </>
     )
 }

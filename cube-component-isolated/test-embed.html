@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webflow Mock Integration</title>
+  
+  <!-- In Webflow, you would upload this CSS and link it, or inline it -->
+  <link rel="stylesheet" href="./dist/assets/water-cube-widget.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #0d0d0d;
+      color: #fff;
+    }
+
+    .mock-webflow-section {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .content-overlay {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none; /* Let clicks pass through to the cube */
+    }
+
+    h1 {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    }
+    
+    p {
+      font-size: 1.25rem;
+      max-width: 600px;
+      color: #ccc;
+      line-height: 1.6;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    }
+
+    /* THIS IS THE TARGET CONTAINER FOR YOUR WEBFLOW WIDGET */
+    #water-cube-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1; /* Behind the content */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- This simulates a typical Webflow section where you want the cube as a background -->
+  <section class="mock-webflow-section">
+    
+    <!-- 1. ADD THIS DIV IN WEBFLOW WHERE YOU WANT THE CUBE -->
+    <div id="water-cube-container"></div>
+    
+    <div class="content-overlay">
+      <h1>The Water Cube</h1>
+      <p>This page is pure HTML/CSS simulating a Webflow environment. The interactive cube behind this text is being injected directly from the bundled React widget without wrapping the entire page in a React Root.</p>
+    </div>
+  </section>
+
+  <!-- In Webflow, you would add this to the "Before </body> tag" section -->
+  <script type="module" src="./dist/assets/water-cube-widget.js"></script>
+
+</body>
+</html>
